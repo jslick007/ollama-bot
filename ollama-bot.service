@@ -5,9 +5,8 @@ Wants=network-online.target
 
 [Service]
 Type=simple
-User=ollama
-WorkingDirectory=/home/ollama/ollama-bot
-ExecStart=/home/ollama/ollama-bot/.venv/bin/ollama-bot --serve
+WorkingDirectory=/home/janitor/ollama-bot
+ExecStart=/home/janitor/ollama-bot/.venv/bin/ollama-bot --serve
 Restart=on-failure
 RestartSec=5
 
