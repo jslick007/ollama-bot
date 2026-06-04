@@ -6,7 +6,7 @@ import yaml
 DEFAULT_CONFIG = {
     "llm": {
         "provider": "openai",
-        "model": "tinyllama:latest",
+        "model": "qwen2.5:1.5b",
         "api_key": "ollama",
         "base_url": "http://192.168.1.75:11434/v1",
     },
