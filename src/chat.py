@@ -165,10 +165,8 @@ class ChatSession:
         # Record and display the queries that will be sent to DDG
         for q in queries:
             self.search_history.append(q)
-            try:
-                console.print(f"  [dim]search:[/] {q}")
-            except Exception:
-                pass
+            # Suppress echoing of internal search queries for a cleaner output
+            # (previously printed with console.print)
         return queries
 
     def _recursive_search(
@@ -206,10 +204,7 @@ class ChatSession:
                 # Skip this invalid follow‑up query
                 continue
             self.search_history.append(query)
-            try:
-                console.print(f"  [dim]search:[/] {query}")
-            except Exception:
-                pass
+            # Suppress echoing of internal follow‑up queries (no output)
             try:
                 results = self.agent.tool_registry.execute(
                     "search_web", query=query, max_results=5
