@@ -95,9 +95,34 @@ class ChatSession:
             {"role": "user", "content": user_input},
         ]
         result = self._llm_call(messages).strip()
-        queries = [q.strip().strip("\"'") for q in result.split("\n") if q.strip()]
-        queries = [q for q in queries if q.upper() != "NO_SEARCH"]
-        queries = queries[:3]
+        raw_queries = [q.strip().strip("\"'") for q in result.split("\n") if q.strip()]
+        raw_queries = [q for q in raw_queries if q.upper() != "NO_SEARCH"]
+
+        queries = []
+        for q in raw_queries[:3]:
+            if len(q) > 80:
+                continue
+            lower = q.lower()
+            if any(
+                p in lower
+                for p in [
+                    "i apologize",
+                    "i'm sorry",
+                    "i am sorry",
+                    "i do not",
+                    "i don't",
+                    "cannot",
+                    "as an ai",
+                    "i cannot",
+                    "i don't have",
+                ]
+            ):
+                continue
+            queries.append(q)
+
+        if not queries:
+            queries = [user_input[:80].strip()]
+
         for q in queries:
             self.search_history.append(q)
             try:
