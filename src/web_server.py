@@ -618,12 +618,12 @@ async function sendMessage() {
       const c = document.getElementById('messages');
       const d = document.createElement('div');
       d.className = 'msg bot';
-      d.textContent = 'Error: connection timed out';
+      d.textContent = 'Error: connection timed out (wait longer or check server)';
       c.appendChild(d);
       document.getElementById('sendBtn').disabled = false;
       document.getElementById('input').focus();
     }
-  }, 120000);
+  }, 300000);
 }
 
 async function clearChat() {

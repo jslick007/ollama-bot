@@ -1,6 +1,7 @@
 """
 Demonstrates using SQLite-backed memory for conversation persistence.
 """
+
 from src.memory import SQLiteStore
 
 memory = SQLiteStore(db_path=":memory:", ttl=3600)
