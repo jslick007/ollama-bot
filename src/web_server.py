@@ -103,49 +103,49 @@ HTML_PAGE = """\
 }
 
 .theme-modern {
-  --bg-primary: #ffffff;
-  --bg-secondary: #f3f4f6;
-  --bg-tertiary: #e5e7eb;
-  --neon-1: #2563eb;
-  --neon-2: #dc2626;
-  --neon-3: #7c3aed;
-  --text-primary: #111827;
-  --text-secondary: #6b7280;
-  --text-dim: #9ca3af;
-  --glow-1: 0 1px 3px rgba(37,99,235,.15);
-  --glow-2: 0 1px 3px rgba(220,38,38,.15);
-  --border: #d1d5db;
+  --bg-primary: #1a1a1a;
+  --bg-secondary: #222222;
+  --bg-tertiary: #2a2a2a;
+  --neon-1: #3b82f6;
+  --neon-2: #ef4444;
+  --neon-3: #8b5cf6;
+  --text-primary: #e5e5e5;
+  --text-secondary: #888888;
+  --text-dim: #555555;
+  --glow-1: 0 0 12px rgba(59,130,246,.1);
+  --glow-2: 0 0 12px rgba(239,68,68,.1);
+  --border: #333333;
   --font-display: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
   --font-mono: 'JetBrains Mono', monospace;
-  --msg-user-bg: #eff6ff;
-  --msg-user-border: #bfdbfe;
-  --msg-bot-bg: #f9fafb;
-  --msg-bot-border: #e5e7eb;
+  --msg-user-bg: #1e293b;
+  --msg-user-border: #334155;
+  --msg-bot-bg: #262626;
+  --msg-bot-border: #333333;
   --glow-user: none;
   --glow-bot: none;
 }
 
 .theme-simple {
-  --bg-primary: #ffffff;
-  --bg-secondary: #fafafa;
-  --bg-tertiary: #f0f0f0;
-  --neon-1: #333333;
-  --neon-2: #555555;
-  --neon-3: #777777;
-  --text-primary: #000000;
-  --text-secondary: #555555;
-  --text-dim: #888888;
-  --glow-1: none;
-  --glow-2: none;
-  --border: #cccccc;
+  --bg-primary: #f8f9fa;
+  --bg-secondary: #ffffff;
+  --bg-tertiary: #e9ecef;
+  --neon-1: #0d6efd;
+  --neon-2: #dc3545;
+  --neon-3: #6f42c1;
+  --text-primary: #212529;
+  --text-secondary: #6c757d;
+  --text-dim: #adb5bd;
+  --glow-1: 0 1px 3px rgba(13,110,253,.12);
+  --glow-2: 0 1px 3px rgba(220,53,69,.12);
+  --border: #dee2e6;
   --font-display: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
-  --font-mono: 'Courier New', monospace;
-  --msg-user-bg: #f0f0f0;
-  --msg-user-border: #dddddd;
+  --font-mono: 'JetBrains Mono', monospace;
+  --msg-user-bg: #e7f1ff;
+  --msg-user-border: #b6d4fe;
   --msg-bot-bg: #ffffff;
-  --msg-bot-border: #dddddd;
+  --msg-bot-border: #dee2e6;
   --glow-user: none;
-  --glow-bot: none;
+  --glow-bot: 0 1px 2px rgba(0,0,0,.05);
 }
 
 /* scanlines overlay */
@@ -554,6 +554,7 @@ async function sendMessage() {
   });
 
   es.addEventListener('token', function (e) {
+    if (connTimeout) clearTimeout(connTimeout);
     if (!started) { removeLoading(); started = true; }
     const p = JSON.parse(e.data);
     fullContent = p.text;
@@ -569,16 +570,19 @@ async function sendMessage() {
 
   es.addEventListener('done', function (e) {
     es.close();
+    if (connTimeout) clearTimeout(connTimeout);
     if (!started) removeLoading();
     renderBotContent();
     document.getElementById('sendBtn').disabled = false;
     document.getElementById('input').focus();
   });
 
+  let esErrCount = 0;
+
   es.addEventListener('error', function (e) {
-    es.close();
-    removeLoading();
     if (e.data) {
+      es.close();
+      removeLoading();
       try {
         const p = JSON.parse(e.data);
         const c = document.getElementById('messages');
@@ -587,16 +591,39 @@ async function sendMessage() {
         d.innerHTML = '<span style="color:var(--neon-2)">ERROR: ' + (p.message || '') + '</span>';
         c.appendChild(d);
       } catch (_) {}
-    } else if (!started) {
+      document.getElementById('sendBtn').disabled = false;
+      document.getElementById('input').focus();
+      return;
+    }
+    esErrCount++;
+    if (esErrCount >= 5) {
+      es.close();
+      removeLoading();
+      if (!started) {
+        const c = document.getElementById('messages');
+        const d = document.createElement('div');
+        d.className = 'msg bot';
+        d.textContent = 'Error: connection failed';
+        c.appendChild(d);
+      }
+      document.getElementById('sendBtn').disabled = false;
+      document.getElementById('input').focus();
+    }
+  });
+
+  const connTimeout = setTimeout(function () {
+    if (!started) {
+      es.close();
+      removeLoading();
       const c = document.getElementById('messages');
       const d = document.createElement('div');
       d.className = 'msg bot';
-      d.textContent = 'Error: connection failed';
+      d.textContent = 'Error: connection timed out';
       c.appendChild(d);
+      document.getElementById('sendBtn').disabled = false;
+      document.getElementById('input').focus();
     }
-    document.getElementById('sendBtn').disabled = false;
-    document.getElementById('input').focus();
-  });
+  }, 120000);
 }
 
 async function clearChat() {

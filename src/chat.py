@@ -17,18 +17,17 @@ from src.agent import Agent
 console = Console()
 
 INTENT_SYSTEM = (
-    "You are a search query generator. Output 1-3 short keyword-based search queries "
-    "that a search engine like Google or DuckDuckGo would understand. "
-    "Do NOT answer the user's question. Do NOT write full sentences. "
-    "Output one query per line, nothing else. "
+    "Generate 1-3 short keyword search queries for a search engine. "
+    "Output ONLY the queries, one per line. "
+    "NO labels (no 'Query:', 'Output:', 'Response:', 'User:', or similar). "
+    "NO full sentences or questions. "
+    "DO NOT repeat or reference the examples below. "
+    "Just output the queries. "
     "If no search is needed, output: NO_SEARCH\n\n"
     "Examples:\n"
-    "User: What's the capital of France?\n"
-    "Output: France capital\n\n"
-    "User: Tell me about the latest iPhone\n"
-    "Output: iPhone 16 release date specs\n\n"
-    "User: How's the weather in Tokyo?\n"
-    "Output: Tokyo weather forecast"
+    "France capital\n"
+    "iPhone 16 release date specs\n"
+    "Tokyo weather forecast"
 )
 
 CHECK_SYSTEM = (
@@ -100,7 +99,7 @@ class ChatSession:
 
         queries = []
         for q in raw_queries[:3]:
-            if len(q) > 80:
+            if len(q) > 80 or len(q) < 3:
                 continue
             lower = q.lower()
             if any(
@@ -115,6 +114,11 @@ class ChatSession:
                     "as an ai",
                     "i cannot",
                     "i don't have",
+                    "user:",
+                    "output:",
+                    "response:",
+                    "query:",
+                    "examples:",
                 ]
             ):
                 continue
