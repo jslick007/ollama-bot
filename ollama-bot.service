@@ -1,0 +1,15 @@
+[Unit]
+Description=Ollama Bot Web Server
+After=network-online.target
+Wants=network-online.target
+
+[Service]
+Type=simple
+User=ollama
+WorkingDirectory=/home/ollama/.local/share/ollama-bot
+ExecStart=/home/ollama/.local/share/ollama-bot/.venv/bin/ollama-bot --serve
+Restart=on-failure
+RestartSec=5
+
+[Install]
+WantedBy=multi-user.target
