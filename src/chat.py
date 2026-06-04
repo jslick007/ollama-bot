@@ -1,4 +1,5 @@
 import asyncio
+import sys
 import json
 import queue
 import re
@@ -362,56 +363,11 @@ class ChatSession:
 
 
 def repl(agent: Agent):
-    session = ChatSession(agent)
-    tools = agent.tool_registry.list_tools()
-
-    info_lines = [
-        f"[bold]Model:[/] {agent.llm.model}",
-    ]
-    if tools:
-        info_lines.append(f"[bold]Tools:[/] {', '.join(tools)}")
-    info_lines.append("[bold]Commands:[/] /exit  /clear  /report  /help")
-
-    console.print(
-        Panel("\n".join(info_lines), title="Ollama Bot Chat", border_style="blue")
-    )
-
-    while True:
-        try:
-            user_input = Prompt.ask("[bold]You[/]").strip()
-        except (EOFError, KeyboardInterrupt):
-            print()
-            break
-
-        if not user_input:
-            continue
-
-        if user_input.startswith("/"):
-            cmd = user_input.lower()
-            if cmd == "/exit":
-                break
-            elif cmd == "/clear":
-                session.clear()
-                console.print("[dim]Conversation cleared.[/dim]")
-                continue
-            elif cmd == "/report":
-                r = session.report()
-                console.print(r)
-                continue
-            elif cmd == "/help":
-                console.print("[bold]Commands:[/]")
-                console.print("  /exit    - Exit the chat")
-                console.print("  /clear   - Clear conversation history")
-                console.print("  /report  - Show telemetry report")
-                console.print("  /help    - Show this help")
-                continue
-            else:
-                console.print(f"[red]Unknown command:[/] {cmd}")
-                continue
-
-        response = session.send(user_input)
-        console.print(Panel(Markdown(response), title="Bot", border_style="green"))
-        print()
+    # REPL disabled – the bot now works in single‑task mode only.
+    print("Interactive REPL has been disabled. Use the CLI with a task argument, e.g.:")
+    print('    python -m src.cli "your question here"')
+    # Exit immediately
+    sys.exit(0)
 
 
 def main():
@@ -452,7 +408,10 @@ def main():
         print("\n--- Report ---")
         print(json.dumps(agent.report(), indent=2))
     else:
-        repl(agent)
+        # No task supplied – show a short usage hint and exit.
+        print("No task provided. Use the CLI with a task argument, e.g.:")
+        print('    python -m src.cli "why is my car overheating?"')
+        sys.exit(0)
 
 
 if __name__ == "__main__":
