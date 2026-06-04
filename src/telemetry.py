@@ -2,7 +2,6 @@ import time
 import json
 from typing import Dict, Any, Optional
 
-
 DEFAULT_PRICING = {
     "gpt-3.5-turbo": {"input": 0.0015, "output": 0.002},
     "gpt-4-turbo": {"input": 0.01, "output": 0.03},
@@ -74,11 +73,11 @@ class TelemetryCollector:
             "total_completion_tokens": self.total_completion_tokens,
             "total_tokens": self.total_prompt_tokens + self.total_completion_tokens,
             "total_cost": round(self.total_cost, 6),
-            "average_latency_ms": round(
-                sum(c["latency_ms"] for c in self.calls) / len(self.calls), 2
-            )
-            if self.calls
-            else 0,
+            "average_latency_ms": (
+                round(sum(c["latency_ms"] for c in self.calls) / len(self.calls), 2)
+                if self.calls
+                else 0
+            ),
         }
 
     def reset(self):
