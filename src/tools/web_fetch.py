@@ -1,6 +1,7 @@
 import urllib.request
 import ssl
 
+
 def fetch_page(url: str, timeout: int = 10) -> str:
     """Fetch the raw HTML/text of *url*.
     Returns the page content as a UTF‑8 string, or an error message.
@@ -13,4 +14,3 @@ def fetch_page(url: str, timeout: int = 10) -> str:
             return resp.read().decode(charset, errors="replace")
     except Exception as e:
         return f"Fetch error: {e}"
-}
