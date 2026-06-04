@@ -242,10 +242,14 @@ class ChatSession:
                 self.history.append({"role": "user", "content": user_input})
 
                 queries = self._determine_intent(user_input)
-                for query in queries:
-                    put_queue.put(("search", {"query": query}))
+                for q in queries:
+                    put_queue.put(("search", {"query": q}))
 
                 search_context = self._recursive_search(queries, user_input)
+
+                for q in self.search_history:
+                    if q not in queries:
+                        put_queue.put(("search", {"query": q}))
 
                 messages = self._build_messages(user_input)
                 if search_context:
