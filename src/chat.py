@@ -88,6 +88,41 @@ class ChatSession:
         except Exception:
             return self.agent._llm_call_with_telemetry(messages, **kwargs)
 
+    def _is_valid_query(self, q: str) -> bool:
+        # Basic length constraints
+        if len(q) > 80 or len(q) < 3:
+            return False
+        # Word count constraint – keep concise keyword queries (max 8 words)
+        if len(q.split()) > 8:
+            return False
+        lower = q.lower()
+        # Filter out apology/refusal and any label prefixes or example markers
+        if any(
+            p in lower
+            for p in [
+                "i apologize",
+                "i'm sorry",
+                "i am sorry",
+                "i do not",
+                "i don't",
+                "cannot",
+                "as an ai",
+                "i cannot",
+                "i don't have",
+                "user:",
+                "output:",
+                "response:",
+                "query:",
+                "examples:",
+                "according to",
+                "based on",
+                "reply:",
+                "revised answer",
+            ]
+        ):
+            return False
+        return True
+
     def _determine_intent(self, user_input: str) -> List[str]:
         messages = [
             {"role": "system", "content": INTENT_SYSTEM},
@@ -99,37 +134,7 @@ class ChatSession:
 
         queries = []
         for q in raw_queries[:3]:
-            # Basic length constraints
-            if len(q) > 80 or len(q) < 3:
-                continue
-            # Word count constraint – keep concise keyword queries (max 8 words)
-            if len(q.split()) > 8:
-                continue
-            lower = q.lower()
-            # Filter out apology/refusal and any label prefixes or example markers
-            if any(
-                p in lower
-                for p in [
-                    "i apologize",
-                    "i'm sorry",
-                    "i am sorry",
-                    "i do not",
-                    "i don't",
-                    "cannot",
-                    "as an ai",
-                    "i cannot",
-                    "i don't have",
-                    "user:",
-                    "output:",
-                    "response:",
-                    "query:",
-                    "examples:",
-                    "according to",
-                    "based on",
-                    "reply:",
-                    "revised answer",
-                ]
-            ):
+            if not self._is_valid_query(q):
                 continue
             queries.append(q)
 
@@ -174,6 +179,10 @@ class ChatSession:
             if check.upper() == "ENOUGH":
                 break
             query = check
+            # Apply the same validation as intent queries
+            if not self._is_valid_query(query):
+                # Skip this invalid follow‑up query
+                continue
             self.search_history.append(query)
             try:
                 console.print(f"  [dim]search:[/] {query}")
