@@ -378,13 +378,13 @@ async function sendMessage() {
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ message: text })
     });
-    removeLoading();
     currentBotMsg = null;
     fullContent = '';
 
     const reader = res.body.getReader();
     const decoder = new TextDecoder();
     let buf = '';
+    let started = false;
 
     while (true) {
       const { done, value } = await reader.read();
@@ -409,6 +409,7 @@ async function sendMessage() {
         if (eventType === 'search') {
           addSearchInfo(p.query);
         } else if (eventType === 'token') {
+          if (!started) { removeLoading(); started = true; }
           fullContent = p.text;
           if (!currentBotMsg) {
             currentBotMsg = document.createElement('div');
@@ -419,6 +420,7 @@ async function sendMessage() {
           currentBotMsg.textContent = fullContent;
           document.getElementById('messages').scrollTop = document.getElementById('messages').scrollHeight;
         } else if (eventType === 'done') {
+          if (!started) removeLoading();
           renderBotContent();
         }
       }
