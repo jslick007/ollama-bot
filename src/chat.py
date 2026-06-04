@@ -150,7 +150,7 @@ def main():
     )
     parser.add_argument("--serve", action="store_true", help="Start web server")
     parser.add_argument(
-        "--port", type=int, default=80, help="Web server port (default: 80)"
+        "--port", type=int, default=None, help="Web server port (default: 8080)"
     )
     args = parser.parse_args()
 
@@ -163,7 +163,12 @@ def main():
     if args.serve:
         from src.web_server import run_server
 
-        run_server(agent, port=args.port)
+        port = (
+            args.port
+            if args.port is not None
+            else agent.config.get("server", {}).get("port", 80)
+        )
+        run_server(agent, port=port)
 
     if args.task:
         result = agent.run(args.task)

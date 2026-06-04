@@ -22,5 +22,8 @@
     "telemetry": {
         "log_to_stdout": false,
         "log_file": null
+    },
+    "server": {
+        "port": 8080
     }
 }

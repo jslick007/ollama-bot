@@ -29,6 +29,9 @@ DEFAULT_CONFIG = {
         "log_to_stdout": False,
         "log_file": None,
     },
+    "server": {
+        "port": 8080,
+    },
 }
 
 
