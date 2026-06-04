@@ -113,6 +113,23 @@ class ReActPlanner:
                             "content": f"Observation: Query: {term}\n{result}",
                         }
                     )
+                    # Extract any source URLs from the DDG result and fetch their full content
+                    for url in re.findall(r"Source:\s*(\S+)", result):
+                        try:
+                            page_content = self.tool_registry.execute(
+                                "fetch_page", url=url
+                            )
+                            # Include only a preview to keep token usage reasonable
+                            preview = page_content[:2000]
+                            messages.append(
+                                {
+                                    "role": "assistant",
+                                    "content": f"Page content from {url}:\n{preview}",
+                                }
+                            )
+                        except Exception:
+                            # If fetching fails, continue without aborting the flow
+                            continue
                 except Exception:
                     # If a search fails, just continue – we still want a fast answer
                     continue

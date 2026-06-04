@@ -34,6 +34,7 @@ class Agent:
             max_tool_errors=self.config.get("planner", {}).get("max_tool_errors", 3),
         )
         self._register_default_tools()
+        self._register_webfetch_tool()
 
     def _init_llm(self) -> OpenAILLM:
         llm_config = self.config.get("llm", {})
@@ -69,6 +70,22 @@ class Agent:
             search_web,
             name="search_web",
             description="Search the web for information using DuckDuckGo. Returns titles, snippets, and source URLs.",
+        )
+        # Register a simple page‑fetcher so the planner can retrieve full page content.
+        from src.tools.web_fetch import fetch_page
+        self.tool_registry.register(
+            fetch_page,
+            name="fetch_page",
+            description="Fetch the raw HTML/text of a URL (used to get full page content after a search).",
+        )
+    
+    def _register_webfetch_tool(self):
+        # Register the built‑in webfetch tool so the planner can retrieve full page content.
+        from src.webfetch import webfetch  # type: ignore
+        self.tool_registry.register(
+            webfetch,
+            name="webfetch",
+            description="Fetch the raw content of a given URL (HTML or text).",
         )
 
     def register_tool(
