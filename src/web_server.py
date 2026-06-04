@@ -1,6 +1,6 @@
 import json
 
-from fastapi import FastAPI, Request
+from fastapi import FastAPI
 from fastapi.responses import HTMLResponse, JSONResponse, StreamingResponse
 from src.agent import Agent
 from src.chat import ChatSession
@@ -303,7 +303,7 @@ function addSearchInfo(query) {
   const c = document.getElementById('messages');
   const d = document.createElement('div');
   d.className = 'search-info';
-  d.textContent = '\u25b6 search: ' + query;
+  d.textContent = 'search: ' + query;
   c.appendChild(d);
   c.scrollTop = c.scrollHeight;
 }
@@ -330,14 +330,14 @@ function addLoading() {
   const d = document.createElement('div');
   d.className = 'loading';
   d.id = 'loading';
-  d.textContent = '\u25b6 PROCESSING';
+  d.textContent = 'Thinking...';
   c.appendChild(d);
   c.scrollTop = c.scrollHeight;
   let secs = 0;
   thinkingTimer = setInterval(() => {
     secs++;
     const el = document.getElementById('loading');
-    if (el) el.textContent = '\u25b6 PROCESSING (' + secs + 's)';
+    if (el) el.textContent = 'Thinking... (' + secs + 's)';
   }, 1000);
 }
 
@@ -371,71 +371,59 @@ async function sendMessage() {
   addLoading();
   currentBotMsg = null;
   fullContent = '';
+  let started = false;
 
-  try {
-    const res = await fetch('/api/chat', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ message: text })
-    });
-    currentBotMsg = null;
-    fullContent = '';
+  const es = new EventSource('/api/chat?message=' + encodeURIComponent(text));
 
-    const reader = res.body.getReader();
-    const decoder = new TextDecoder();
-    let buf = '';
-    let started = false;
+  es.addEventListener('search', function (e) {
+    const p = JSON.parse(e.data);
+    addSearchInfo(p.query);
+  });
 
-    while (true) {
-      const { done, value } = await reader.read();
-      if (done) break;
-      buf += decoder.decode(value, { stream: true });
-
-      const parts = buf.split('\\n\\n');
-      buf = parts.pop() || '';
-
-      for (const raw of parts) {
-        const lines = raw.split('\\n');
-        let eventType = 'message';
-        let data = '';
-        for (const line of lines) {
-          if (line.startsWith('event: ')) eventType = line.slice(7).trim();
-          else if (line.startsWith('data: ')) data += line.slice(6);
-        }
-        if (!data) continue;
-        let p;
-        try { p = JSON.parse(data); } catch { continue; }
-
-        if (eventType === 'search') {
-          addSearchInfo(p.query);
-        } else if (eventType === 'token') {
-          if (!started) { removeLoading(); started = true; }
-          fullContent = p.text;
-          if (!currentBotMsg) {
-            currentBotMsg = document.createElement('div');
-            currentBotMsg.className = 'msg bot';
-            currentBotMsg.id = 'bot-msg';
-            document.getElementById('messages').appendChild(currentBotMsg);
-          }
-          currentBotMsg.textContent = fullContent;
-          document.getElementById('messages').scrollTop = document.getElementById('messages').scrollHeight;
-        } else if (eventType === 'done') {
-          if (!started) removeLoading();
-          renderBotContent();
-        }
-      }
+  es.addEventListener('token', function (e) {
+    if (!started) { removeLoading(); started = true; }
+    const p = JSON.parse(e.data);
+    fullContent = p.text;
+    if (!currentBotMsg) {
+      currentBotMsg = document.createElement('div');
+      currentBotMsg.className = 'msg bot';
+      currentBotMsg.id = 'bot-msg';
+      document.getElementById('messages').appendChild(currentBotMsg);
     }
-  } catch (err) {
+    currentBotMsg.textContent = fullContent;
+    document.getElementById('messages').scrollTop = document.getElementById('messages').scrollHeight;
+  });
+
+  es.addEventListener('done', function (e) {
+    es.close();
+    if (!started) removeLoading();
+    renderBotContent();
+    document.getElementById('sendBtn').disabled = false;
+    document.getElementById('input').focus();
+  });
+
+    es.addEventListener('error', function (e) {
+    es.close();
     removeLoading();
-    fullContent = '';
-    const c = document.getElementById('messages');
-    const d = document.createElement('div');
-    d.className = 'msg bot';
-    d.innerHTML = '<span style="color:var(--neon-magenta)">ERROR: ' + err.message + '</span>';
-    c.appendChild(d);
-  }
-  document.getElementById('sendBtn').disabled = false;
-  document.getElementById('input').focus();
+    if (e.data) {
+      try {
+        const p = JSON.parse(e.data);
+        const c = document.getElementById('messages');
+        const d = document.createElement('div');
+        d.className = 'msg bot';
+        d.innerHTML = '<span style="color:var(--neon-magenta)">ERROR: ' + (p.message || '') + '</span>';
+        c.appendChild(d);
+      } catch (_) {}
+    } else if (!started) {
+      const c = document.getElementById('messages');
+      const d = document.createElement('div');
+      d.className = 'msg bot';
+      d.textContent = 'Error: connection failed';
+      c.appendChild(d);
+    }
+    document.getElementById('sendBtn').disabled = false;
+    document.getElementById('input').focus();
+  });
 }
 
 async function clearChat() {
@@ -462,10 +450,9 @@ async def index():
     return HTML_PAGE.replace("MODEL_NAME", model_name, 2)
 
 
-@app.post("/api/chat")
-async def chat(request: Request):
-    data = await request.json()
-    message = data.get("message", "").strip()
+@app.get("/api/chat")
+async def chat(message: str = ""):
+    message = message.strip()
     if not message:
         return JSONResponse({"error": "empty message"}, status_code=400)
 
@@ -477,8 +464,14 @@ async def chat(request: Request):
                 yield f"event: token\ndata: {json.dumps({'text': event['text']})}\n\n"
             elif event["type"] == "done":
                 yield f"event: done\ndata: {json.dumps({'processing_time': event['processing_time']})}\n\n"
+            elif event["type"] == "error":
+                yield f"event: error\ndata: {json.dumps({'message': event['message']})}\n\n"
 
-    return StreamingResponse(event_stream(), media_type="text/event-stream")
+    return StreamingResponse(
+        event_stream(),
+        media_type="text/event-stream",
+        headers={"Cache-Control": "no-cache", "X-Accel-Buffering": "no"},
+    )
 
 
 @app.post("/api/clear")

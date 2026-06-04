@@ -86,7 +86,7 @@ class ChatSession:
             ) as progress:
                 progress.add_task("Thinking...", total=None)
                 return self.agent._llm_call_with_telemetry(messages, **kwargs)
-        except UnicodeEncodeError:
+        except Exception:
             return self.agent._llm_call_with_telemetry(messages, **kwargs)
 
     def _determine_intent(self, user_input: str) -> List[str]:
@@ -234,36 +234,39 @@ class ChatSession:
         put_queue: queue.Queue = queue.Queue()
 
         def _run():
-            self.last_search_query = ""
-            self.search_history.clear()
-            self.processing_time = 0.0
-            t0 = time.perf_counter()
-            self.history.append({"role": "user", "content": user_input})
+            try:
+                self.last_search_query = ""
+                self.search_history.clear()
+                self.processing_time = 0.0
+                t0 = time.perf_counter()
+                self.history.append({"role": "user", "content": user_input})
 
-            queries = self._determine_intent(user_input)
-            for query in queries:
-                put_queue.put(("search", {"query": query}))
+                queries = self._determine_intent(user_input)
+                for query in queries:
+                    put_queue.put(("search", {"query": query}))
 
-            search_context = self._recursive_search(queries, user_input)
+                search_context = self._recursive_search(queries, user_input)
 
-            messages = self._build_messages(user_input)
-            if search_context:
-                messages.insert(1, {"role": "system", "content": search_context})
+                messages = self._build_messages(user_input)
+                if search_context:
+                    messages.insert(1, {"role": "system", "content": search_context})
 
-            response = self._self_consistency(messages)
-            response = self._verify_answer(response, search_context)
+                response = self._self_consistency(messages)
+                response = self._verify_answer(response, search_context)
 
-            self.history.append({"role": "assistant", "content": response})
-            self.processing_time = time.perf_counter() - t0
+                self.history.append({"role": "assistant", "content": response})
+                self.processing_time = time.perf_counter() - t0
 
-            chunks = re.split(r"(?<=[.!?])\s+", response) or [response]
-            acc = ""
-            for chunk in chunks:
-                acc += chunk + " "
-                put_queue.put(("token", {"text": acc}))
-                time.sleep(0.015)
+                chunks = re.split(r"(?<=[.!?])\s+", response) or [response]
+                acc = ""
+                for chunk in chunks:
+                    acc += chunk + " "
+                    put_queue.put(("token", {"text": acc}))
+                    time.sleep(0.015)
 
-            put_queue.put(("done", {"processing_time": self.processing_time}))
+                put_queue.put(("done", {"processing_time": self.processing_time}))
+            except Exception as exc:
+                put_queue.put(("error", {"message": f"Processing failed: {exc}"}))
 
         thread = threading.Thread(target=_run, daemon=True)
         thread.start()
@@ -272,7 +275,7 @@ class ChatSession:
         while True:
             event_type, data = await loop.run_in_executor(None, put_queue.get)
             yield {"type": event_type, **data}
-            if event_type == "done":
+            if event_type in ("done", "error"):
                 break
 
     def send(self, user_input: str) -> str:
