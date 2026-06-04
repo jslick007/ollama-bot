@@ -1,4 +1,5 @@
 import json
+import time
 from typing import Dict, List
 
 from rich.console import Console
@@ -27,6 +28,8 @@ class ChatSession:
         self.agent = agent
         self.history: List[Dict[str, str]] = []
         self.last_search_query: str = ""
+        self.search_history: List[str] = []
+        self.processing_time: float = 0.0
 
     def _build_messages(self, user_input: str) -> List[Dict[str, str]]:
         tools_desc = "\n".join(
@@ -68,6 +71,7 @@ class ChatSession:
         query = self._llm_call(messages).strip().strip("\"'")
         if query.upper() == "NO_SEARCH":
             return []
+        self.search_history.append(query)
         try:
             console.print(f"  [dim]search:[/] {query}")
         except Exception:
@@ -103,6 +107,7 @@ class ChatSession:
             if check.upper() == "ENOUGH":
                 break
             query = check
+            self.search_history.append(query)
             try:
                 console.print(f"  [dim]search:[/] {query}")
             except Exception:
@@ -119,6 +124,9 @@ class ChatSession:
 
     def send(self, user_input: str) -> str:
         self.last_search_query = ""
+        self.search_history.clear()
+        self.processing_time = 0.0
+        t0 = time.perf_counter()
         self.history.append({"role": "user", "content": user_input})
         queries = self._determine_intent(user_input)
         search_context = self._recursive_search(queries, user_input)
@@ -127,6 +135,7 @@ class ChatSession:
             messages.insert(1, {"role": "system", "content": search_context})
         response = self._llm_call(messages)
         self.history.append({"role": "assistant", "content": response})
+        self.processing_time = time.perf_counter() - t0
         return response
 
     def clear(self):

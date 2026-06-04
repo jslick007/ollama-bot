@@ -163,6 +163,19 @@ HTML_PAGE = """\
 </div>
 
 <script>
+let thinkingTimer = null;
+
+function addSearchInfo(searches) {
+  const container = document.getElementById('messages');
+  for (const q of searches) {
+    const info = document.createElement('div');
+    info.className = 'search-info';
+    info.textContent = 'search: ' + q;
+    container.appendChild(info);
+  }
+  container.scrollTop = container.scrollHeight;
+}
+
 function addMessage(role, content, searchQuery) {
   const container = document.getElementById('messages');
   if (searchQuery) {
@@ -187,12 +200,20 @@ function addLoading() {
   const div = document.createElement('div');
   div.className = 'loading';
   div.id = 'loading';
-  div.textContent = 'Thinking...';
+  div.textContent = 'Thinking\u2026';
   container.appendChild(div);
   container.scrollTop = container.scrollHeight;
+  let secs = 0;
+  thinkingTimer = setInterval(() => {
+    secs++;
+    const el = document.getElementById('loading');
+    if (el) el.textContent = 'Thinking\u2026 (' + secs + 's)';
+  }, 1000);
 }
 
 function removeLoading() {
+  if (thinkingTimer) clearInterval(thinkingTimer);
+  thinkingTimer = null;
   const el = document.getElementById('loading');
   if (el) el.remove();
 }
@@ -215,7 +236,11 @@ async function sendMessage() {
     });
     const data = await res.json();
     removeLoading();
-    addMessage('bot', data.response, data.search_query);
+    if (data.searches && data.searches.length) {
+      addSearchInfo(data.searches);
+    }
+    const elapsed = data.processing_time ? ' (' + data.processing_time + 's)' : '';
+    addMessage('bot', data.response + elapsed, data.search_query);
   } catch (err) {
     removeLoading();
     addMessage('bot', 'Error: ' + err.message);
@@ -254,6 +279,8 @@ async def chat(request: Request):
     return {
         "response": response,
         "search_query": getattr(_session, "last_search_query", ""),
+        "searches": getattr(_session, "search_history", []),
+        "processing_time": round(getattr(_session, "processing_time", 0.0), 2),
     }
 
 
