@@ -30,7 +30,7 @@ DEFAULT_CONFIG = {
         "log_file": None,
     },
     "server": {
-        "port": 8080,
+        "port": 80,
     },
 }
 

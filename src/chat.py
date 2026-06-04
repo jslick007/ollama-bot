@@ -150,7 +150,7 @@ def main():
     )
     parser.add_argument("--serve", action="store_true", help="Start web server")
     parser.add_argument(
-        "--port", type=int, default=None, help="Web server port (default: 8080)"
+        "--port", type=int, default=None, help="Web server port (default: 80)"
     )
     args = parser.parse_args()
 
