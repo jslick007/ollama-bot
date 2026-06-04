@@ -93,7 +93,9 @@ class ChatSession:
                 pass
         return queries
 
-    def _recursive_search(self, queries: List[str], user_input: str, max_rounds: int = 2) -> str:
+    def _recursive_search(
+        self, queries: List[str], user_input: str, max_rounds: int = 2
+    ) -> str:
         if not queries:
             return ""
         all_results: List[Dict] = []
