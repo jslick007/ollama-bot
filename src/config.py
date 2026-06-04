@@ -62,11 +62,18 @@ def load_config(
     path: Optional[str] = None, overrides: Optional[Dict[str, Any]] = None
 ) -> Dict[str, Any]:
     config = DEFAULT_CONFIG.copy()
+    # Always load external config file if present.
     file_config = _find_config(path)
+    external_model = None
     if file_config:
         _deep_merge(config, file_config)
+        external_model = config.get("llm", {}).get("model")
+    # Apply any overrides, but preserve the external model if it was set.
     if overrides:
         _deep_merge(config, overrides)
+        if external_model:
+            # Force the model to stay as defined in external config.
+            config.setdefault("llm", {})["model"] = external_model
     return config
 
 

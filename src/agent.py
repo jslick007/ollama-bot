@@ -40,7 +40,7 @@ class Agent:
         return OpenAILLM(
             api_key=llm_config.get("api_key", ""),
             base_url=llm_config.get("base_url"),
-            model=llm_config.get("model", "gpt-3.5-turbo"),
+            model=llm_config.get("model", "tinyllama:latest"),
         )
 
     def _init_memory(self) -> MemoryBackend:

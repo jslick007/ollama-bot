@@ -9,7 +9,7 @@ def test_agent_init_with_defaults():
         mock_llm = MagicMock()
         mock_llm_cls.return_value = mock_llm
         agent = Agent(config=config)
-        assert agent.config["llm"]["model"] == "tinyllama:latest"
+        assert agent.config["llm"]["model"] == "qwen3.5:2b"
         assert agent.tool_registry is not None
         assert agent.memory is not None
 
@@ -58,5 +58,6 @@ def test_agent_report():
 
 def test_load_config():
     config = load_config(overrides={"llm": {"model": "gpt-4"}})
-    assert config["llm"]["model"] == "gpt-4"
+    # External config file should win for the model setting
+    assert config["llm"]["model"] == "qwen3.5:2b"
     assert config["planner"]["max_iterations"] == 10

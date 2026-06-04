@@ -288,7 +288,7 @@ class ChatSession:
                 if search_context:
                     messages.insert(1, {"role": "system", "content": search_context})
 
-                response = self._self_consistency(messages)
+                response = self._llm_call(messages)
                 response = self._verify_answer(response, search_context)
 
                 self.history.append({"role": "assistant", "content": response})
@@ -326,7 +326,7 @@ class ChatSession:
         messages = self._build_messages(user_input)
         if search_context:
             messages.insert(1, {"role": "system", "content": search_context})
-        response = self._self_consistency(messages)
+        response = self._llm_call(messages)
         response = self._verify_answer(response, search_context)
         self.history.append({"role": "assistant", "content": response})
         self.processing_time = time.perf_counter() - t0
