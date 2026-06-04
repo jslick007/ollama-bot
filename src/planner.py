@@ -54,7 +54,8 @@ class ReActPlanner:
             "Action Input: <JSON arguments>\n"
             "or if you have the final answer:\n"
             "Final Answer: <answer>\n"
-            "When providing the final answer, format it as a markdown table with two columns: Issue (or cause) and Recommendation (or fix). Use clear headings and one row per point."
+            "When providing the final answer, format it as a markdown table with two columns: Issue (or cause) and Recommendation (or fix). Use clear headings and one row per point.\n"
+            "Do NOT echo the original user query, any 'search:' headings, or repeat the question in the answer. Only output the requested table."
         )
 
     # Helper to extract 3‑4 concise search terms from the user task
