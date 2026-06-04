@@ -99,9 +99,14 @@ class ChatSession:
 
         queries = []
         for q in raw_queries[:3]:
+            # Basic length constraints
             if len(q) > 80 or len(q) < 3:
                 continue
+            # Word count constraint – keep concise keyword queries (max 8 words)
+            if len(q.split()) > 8:
+                continue
             lower = q.lower()
+            # Filter out apology/refusal and any label prefixes or example markers
             if any(
                 p in lower
                 for p in [
@@ -119,6 +124,10 @@ class ChatSession:
                     "response:",
                     "query:",
                     "examples:",
+                    "according to",
+                    "based on",
+                    "reply:",
+                    "revised answer",
                 ]
             ):
                 continue
