@@ -11,6 +11,16 @@ from src.agent import Agent
 
 console = Console()
 
+INTENT_SYSTEM = (
+    "Generate a web search query to find current information for this request. "
+    "Output only the query, nothing else. If no search is needed, output: NO_SEARCH"
+)
+
+CHECK_SYSTEM = (
+    "Given the question and search results, determine if you have enough information "
+    "to answer comprehensively. Reply only: ENOUGH or a follow-up search query."
+)
+
 
 class ChatSession:
     def __init__(self, agent: Agent):
@@ -50,29 +60,71 @@ class ChatSession:
         except UnicodeEncodeError:
             return self.agent._llm_call_with_telemetry(messages)
 
+    def _determine_intent(self, user_input: str) -> List[str]:
+        messages = [
+            {"role": "system", "content": INTENT_SYSTEM},
+            {"role": "user", "content": user_input},
+        ]
+        query = self._llm_call(messages).strip().strip("\"'")
+        if query.upper() == "NO_SEARCH":
+            return []
+        try:
+            console.print(f"  [dim]search:[/] {query}")
+        except Exception:
+            pass
+        return [query]
+
+    def _recursive_search(self, queries: List[str], user_input: str, max_rounds: int = 2) -> str:
+        if not queries:
+            return ""
+        all_results: List[Dict] = []
+        query = queries[0]
+        for _ in range(max_rounds):
+            try:
+                results = self.agent.tool_registry.execute(
+                    "search_web", query=query, max_results=5
+                )
+                self.last_search_query = query
+                all_results.append({"query": query, "results": results})
+            except Exception:
+                self.last_search_query = ""
+                break
+            if _ == max_rounds - 1:
+                break
+            context = self._format_context(all_results)
+            check_messages = [
+                {"role": "system", "content": CHECK_SYSTEM},
+                {
+                    "role": "user",
+                    "content": f"Question: {user_input}\n\n{context}",
+                },
+            ]
+            check = self._llm_call(check_messages).strip().strip("\"'")
+            if check.upper() == "ENOUGH":
+                break
+            query = check
+            try:
+                console.print(f"  [dim]search:[/] {query}")
+            except Exception:
+                pass
+        return self._format_context(all_results)
+
+    def _format_context(self, results_list: List[Dict]) -> str:
+        if not results_list:
+            return ""
+        context_lines = ["Web search results:"]
+        for s in results_list:
+            context_lines.append(f"Query: {s['query']}\n{s['results']}")
+        return "\n\n".join(context_lines)
+
     def send(self, user_input: str) -> str:
+        self.last_search_query = ""
         self.history.append({"role": "user", "content": user_input})
+        queries = self._determine_intent(user_input)
+        search_context = self._recursive_search(queries, user_input)
         messages = self._build_messages(user_input)
-        search_results = []
-        try:
-            console.print(f"  [dim]search_web:[/] {user_input}")
-        except Exception:
-            pass
-        try:
-            results = self.agent.tool_registry.execute(
-                "search_web", query=user_input, max_results=5
-            )
-            self.last_search_query = user_input
-            search_results.append({"query": user_input, "results": results})
-        except Exception:
-            self.last_search_query = ""
-            pass
-        if search_results:
-            context_lines = ["Web search results:"]
-            for s in search_results:
-                context_lines.append(f"Query: {s['query']}\n{s['results']}")
-            context = "\n\n".join(context_lines)
-            messages.insert(1, {"role": "system", "content": context})
+        if search_context:
+            messages.insert(1, {"role": "system", "content": search_context})
         response = self._llm_call(messages)
         self.history.append({"role": "assistant", "content": response})
         return response
