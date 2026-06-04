@@ -124,23 +124,44 @@ class ChatSession:
         return True
 
     def _determine_intent(self, user_input: str) -> List[str]:
-        messages = [
-            {"role": "system", "content": INTENT_SYSTEM},
-            {"role": "user", "content": user_input},
-        ]
-        result = self._llm_call(messages).strip()
-        raw_queries = [q.strip().strip("\"'") for q in result.split("\n") if q.strip()]
-        raw_queries = [q for q in raw_queries if q.upper() != "NO_SEARCH"]
+        # If the user explicitly prefixes the request with "search:" treat the
+        # remainder as the exact query to be used for DDG. This bypasses the LLM
+        # intent‑extraction step and ensures the console displays the real query.
+        if user_input.lower().startswith("search:"):
+            # Remove the leading keyword and any surrounding whitespace
+            raw = user_input[len("search:") :].strip()
+            # Split on newlines or semicolons to allow multiple explicit queries
+            explicit_queries = [q.strip() for q in re.split(r"[\n;]", raw) if q.strip()]
+            queries = []
+            for q in explicit_queries:
+                if self._is_valid_query(q):
+                    queries.append(q)
+            # Fallback to the whole remainder if nothing passed validation
+            if not queries:
+                queries = [raw[:80].strip()]
+        else:
+            # Normal path – ask the LLM to generate short keyword queries
+            messages = [
+                {"role": "system", "content": INTENT_SYSTEM},
+                {"role": "user", "content": user_input},
+            ]
+            result = self._llm_call(messages).strip()
+            raw_queries = [
+                q.strip().strip("\"'") for q in result.split("\n") if q.strip()
+            ]
+            raw_queries = [q for q in raw_queries if q.upper() != "NO_SEARCH"]
 
-        queries = []
-        for q in raw_queries[:3]:
-            if not self._is_valid_query(q):
-                continue
-            queries.append(q)
+            queries = []
+            for q in raw_queries[:3]:
+                if not self._is_valid_query(q):
+                    continue
+                queries.append(q)
 
-        if not queries:
-            queries = [user_input[:80].strip()]
+            # If LLM fails to produce any valid query, fall back to a truncated user input
+            if not queries:
+                queries = [user_input[:80].strip()]
 
+        # Record and display the queries that will be sent to DDG
         for q in queries:
             self.search_history.append(q)
             try:
