@@ -53,8 +53,15 @@ class ReActPlanner:
             "Action: <tool name>\n"
             "Action Input: <JSON arguments>\n"
             "or if you have the final answer:\n"
-            "Final Answer: <answer>\n"
-            "When providing the final answer, first list each exact DDG search query you used on separate lines prefixed with 'Search query: ', then format a markdown table with two columns: Issue (or cause) and Recommendation (or fix). Use clear headings and one row per point.\n"
+            "Final Answer:\n"
+            "Search query: <exact DDG query 1>\n"
+            "Search query: <exact DDG query 2>\n"
+            "\n"
+            "| Issue | Recommendation |\n"
+            "|-------|----------------|\n"
+            "| …     | …              |\n"
+            "\n"
+            "You **must** output exactly as shown—no introductory sentences, no extra commentary, and no repetition of the user question.\n"
             "Do NOT echo the original user query, any 'search:' headings, or repeat the question in the answer. Only output the requested search queries and table."
         )
 
