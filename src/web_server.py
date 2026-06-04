@@ -268,7 +268,7 @@ async def report():
     return _session.report()
 
 
-def run_server(agent: Agent, host: str = "127.0.0.1", port: int = 80):
+def run_server(agent: Agent, host: str = "0.0.0.0", port: int = 80):
     import uvicorn
 
     init(agent)
