@@ -53,7 +53,8 @@ class ReActPlanner:
             "Action: <tool name>\n"
             "Action Input: <JSON arguments>\n"
             "or if you have the final answer:\n"
-            "Final Answer: <answer>"
+            "Final Answer: <answer>\n"
+            "When providing the final answer, format it as a markdown table with two columns: Issue (or cause) and Recommendation (or fix). Use clear headings and one row per point."
         )
 
     # Helper to extract 3‑4 concise search terms from the user task
