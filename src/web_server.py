@@ -25,25 +25,144 @@ HTML_PAGE = """\
 <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🤖</text></svg>">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700&family=JetBrains+Mono:wght@400;600&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700&family=JetBrains+Mono:wght@400;600&family=VT323&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/styles/atom-one-dark.min.css">
 <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/highlight.min.js"></script>
 <style>
-:root {
+/* ===== THEMES ===== */
+
+.theme-cyberpunk,
+.theme-default {
   --bg-primary: #0a0a0f;
   --bg-secondary: #0f0f1a;
   --bg-tertiary: #1a1a2e;
-  --neon-cyan: #00f0ff;
-  --neon-magenta: #ff00aa;
-  --neon-purple: #a855f7;
+  --neon-1: #00f0ff;
+  --neon-2: #ff00aa;
+  --neon-3: #a855f7;
   --text-primary: #e0e0f0;
   --text-secondary: #8888bb;
   --text-dim: #555577;
-  --glow-cyan: 0 0 12px rgba(0,240,255,.12), 0 0 30px rgba(0,240,255,.04);
-  --glow-magenta: 0 0 12px rgba(255,0,170,.12), 0 0 30px rgba(255,0,170,.04);
+  --glow-1: 0 0 12px rgba(0,240,255,.12), 0 0 30px rgba(0,240,255,.04);
+  --glow-2: 0 0 12px rgba(255,0,170,.12), 0 0 30px rgba(255,0,170,.04);
   --border: #2a2a4e;
+  --font-display: 'Orbitron', sans-serif;
+  --font-mono: 'JetBrains Mono', monospace;
+  --msg-user-bg: linear-gradient(135deg, rgba(255,0,170,.12), rgba(168,85,247,.08));
+  --msg-user-border: rgba(255,0,170,.25);
+  --msg-bot-bg: linear-gradient(135deg, rgba(0,240,255,.08), rgba(168,85,247,.04));
+  --msg-bot-border: rgba(0,240,255,.18);
+  --glow-user: var(--glow-2);
+  --glow-bot: var(--glow-1);
 }
+
+.theme-orange-crt {
+  --bg-primary: #0d0700;
+  --bg-secondary: #120a00;
+  --bg-tertiary: #1a0e00;
+  --neon-1: #ff8800;
+  --neon-2: #cc6600;
+  --neon-3: #ffaa33;
+  --text-primary: #ffb000;
+  --text-secondary: #cc8800;
+  --text-dim: #885500;
+  --glow-1: 0 0 12px rgba(255,136,0,.15), 0 0 30px rgba(255,136,0,.05);
+  --glow-2: 0 0 12px rgba(204,102,0,.15), 0 0 30px rgba(204,102,0,.05);
+  --border: #3a2000;
+  --font-display: 'VT323', monospace;
+  --font-mono: 'VT323', monospace;
+  --msg-user-bg: rgba(255,136,0,.08);
+  --msg-user-border: rgba(255,136,0,.2);
+  --msg-bot-bg: rgba(255,136,0,.05);
+  --msg-bot-border: rgba(255,136,0,.15);
+  --glow-user: var(--glow-2);
+  --glow-bot: var(--glow-1);
+}
+
+.theme-green-crt {
+  --bg-primary: #000d00;
+  --bg-secondary: #001200;
+  --bg-tertiary: #001a00;
+  --neon-1: #00ff33;
+  --neon-2: #00cc22;
+  --neon-3: #66ff88;
+  --text-primary: #00ff33;
+  --text-secondary: #00cc33;
+  --text-dim: #006611;
+  --glow-1: 0 0 12px rgba(0,255,51,.15), 0 0 30px rgba(0,255,51,.05);
+  --glow-2: 0 0 12px rgba(0,204,34,.15), 0 0 30px rgba(0,204,34,.05);
+  --border: #003300;
+  --font-display: 'VT323', monospace;
+  --font-mono: 'VT323', monospace;
+  --msg-user-bg: rgba(0,255,51,.08);
+  --msg-user-border: rgba(0,255,51,.2);
+  --msg-bot-bg: rgba(0,255,51,.05);
+  --msg-bot-border: rgba(0,255,51,.15);
+  --glow-user: var(--glow-2);
+  --glow-bot: var(--glow-1);
+}
+
+.theme-modern {
+  --bg-primary: #ffffff;
+  --bg-secondary: #f3f4f6;
+  --bg-tertiary: #e5e7eb;
+  --neon-1: #2563eb;
+  --neon-2: #dc2626;
+  --neon-3: #7c3aed;
+  --text-primary: #111827;
+  --text-secondary: #6b7280;
+  --text-dim: #9ca3af;
+  --glow-1: 0 1px 3px rgba(37,99,235,.15);
+  --glow-2: 0 1px 3px rgba(220,38,38,.15);
+  --border: #d1d5db;
+  --font-display: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+  --font-mono: 'JetBrains Mono', monospace;
+  --msg-user-bg: #eff6ff;
+  --msg-user-border: #bfdbfe;
+  --msg-bot-bg: #f9fafb;
+  --msg-bot-border: #e5e7eb;
+  --glow-user: none;
+  --glow-bot: none;
+}
+
+.theme-simple {
+  --bg-primary: #ffffff;
+  --bg-secondary: #fafafa;
+  --bg-tertiary: #f0f0f0;
+  --neon-1: #333333;
+  --neon-2: #555555;
+  --neon-3: #777777;
+  --text-primary: #000000;
+  --text-secondary: #555555;
+  --text-dim: #888888;
+  --glow-1: none;
+  --glow-2: none;
+  --border: #cccccc;
+  --font-display: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+  --font-mono: 'Courier New', monospace;
+  --msg-user-bg: #f0f0f0;
+  --msg-user-border: #dddddd;
+  --msg-bot-bg: #ffffff;
+  --msg-bot-border: #dddddd;
+  --glow-user: none;
+  --glow-bot: none;
+}
+
+/* scanlines overlay */
+.scanlines {
+  position: fixed; top: 0; left: 0; right: 0; bottom: 0;
+  pointer-events: none; z-index: 9999;
+  display: none;
+}
+.theme-orange-crt .scanlines,
+.theme-green-crt .scanlines {
+  display: block;
+  background: repeating-linear-gradient(
+    0deg, transparent 0px, transparent 2px, rgba(0,0,0,.12) 2px, rgba(0,0,0,.12) 4px
+  );
+}
+
+/* ===== BASE STYLES ===== */
 
 * { margin: 0; padding: 0; box-sizing: border-box; }
 
@@ -57,131 +176,160 @@ body {
   overflow: hidden;
 }
 
+/* ===== HEADER ===== */
+
 .header {
   background: var(--bg-secondary);
-  padding: 12px 24px;
+  padding: 10px 20px;
   display: flex;
   align-items: center;
   justify-content: space-between;
   border-bottom: 1px solid var(--border);
   flex-shrink: 0;
   position: relative;
+  gap: 8px;
 }
 .header::after {
   content: '';
   position: absolute;
   bottom: -1px; left: 0; right: 0;
   height: 1px;
-  background: linear-gradient(90deg, transparent, var(--neon-cyan), var(--neon-magenta), transparent);
+  background: linear-gradient(90deg, transparent, var(--neon-1), var(--neon-2), transparent);
 }
+.header-left { display: flex; align-items: center; gap: 14px; }
 .header-title {
-  font-family: 'Orbitron', sans-serif;
-  font-size: 20px;
+  font-family: var(--font-display);
+  font-size: 18px;
   font-weight: 700;
-  background: linear-gradient(135deg, var(--neon-cyan), var(--neon-magenta));
+  background: linear-gradient(135deg, var(--neon-1), var(--neon-2));
   -webkit-background-clip: text;
   -webkit-text-fill-color: transparent;
   background-clip: text;
 }
-.header-sub { font-size: 12px; color: var(--text-secondary); margin-top: 2px; }
-.btn {
-  padding: 6px 16px;
-  border: 1px solid var(--neon-magenta);
-  border-radius: 6px;
-  background: transparent;
-  color: var(--neon-magenta);
+.header-sub { font-size: 11px; color: var(--text-secondary); margin-top: 1px; }
+
+.theme-modern .header-title,
+.theme-simple .header-title {
+  -webkit-text-fill-color: var(--text-primary);
+  background: none;
+  background-clip: unset;
+}
+
+.header-right { display: flex; align-items: center; gap: 8px; }
+
+.theme-picker {
+  padding: 4px 8px;
+  border: 1px solid var(--border);
+  border-radius: 5px;
+  background: var(--bg-primary);
+  color: var(--text-primary);
+  font-size: 11px;
   cursor: pointer;
-  font-size: 12px;
+  outline: none;
+}
+.theme-picker:focus { border-color: var(--neon-1); }
+
+.btn {
+  padding: 5px 12px;
+  border: 1px solid var(--neon-2);
+  border-radius: 5px;
+  background: transparent;
+  color: var(--neon-2);
+  cursor: pointer;
+  font-size: 11px;
   text-transform: uppercase;
   letter-spacing: 1px;
   transition: all .2s;
 }
 .btn:hover {
-  background: var(--neon-magenta);
+  background: var(--neon-2);
   color: var(--bg-primary);
-  box-shadow: var(--glow-magenta);
+  box-shadow: var(--glow-2);
 }
+
+/* ===== MESSAGES ===== */
 
 #messages {
   flex: 1;
   overflow-y: auto;
-  padding: 24px;
+  padding: 20px;
   display: flex;
   flex-direction: column;
-  gap: 12px;
+  gap: 10px;
   scroll-behavior: smooth;
 }
-#messages::-webkit-scrollbar { width: 6px; }
+#messages::-webkit-scrollbar { width: 5px; }
 #messages::-webkit-scrollbar-track { background: var(--bg-primary); }
 #messages::-webkit-scrollbar-thumb { background: var(--border); border-radius: 3px; }
 
 .msg {
   max-width: 82%;
-  padding: 14px 18px;
-  border-radius: 12px;
-  line-height: 1.6;
+  padding: 12px 16px;
+  border-radius: 10px;
+  line-height: 1.5;
   font-size: 14px;
   position: relative;
 }
 .msg.user {
   align-self: flex-end;
-  background: linear-gradient(135deg, rgba(255,0,170,.12), rgba(168,85,247,.08));
-  border: 1px solid rgba(255,0,170,.25);
-  border-bottom-right-radius: 4px;
-  box-shadow: var(--glow-magenta);
+  background: var(--msg-user-bg);
+  border: 1px solid var(--msg-user-border);
+  border-bottom-right-radius: 3px;
+  box-shadow: var(--glow-user);
 }
 .msg.bot {
   align-self: flex-start;
-  background: linear-gradient(135deg, rgba(0,240,255,.08), rgba(168,85,247,.04));
-  border: 1px solid rgba(0,240,255,.18);
-  border-bottom-left-radius: 4px;
-  box-shadow: var(--glow-cyan);
+  background: var(--msg-bot-bg);
+  border: 1px solid var(--msg-bot-border);
+  border-bottom-left-radius: 3px;
+  box-shadow: var(--glow-bot);
 }
-.msg.bot p { margin: 0 0 8px; }
+.msg.bot p { margin: 0 0 6px; }
 .msg.bot p:last-child { margin-bottom: 0; }
 .msg.bot code {
-  background: rgba(0,240,255,.08);
-  padding: 2px 6px;
-  border-radius: 4px;
+  background: rgba(0,0,0,.08);
+  padding: 2px 5px;
+  border-radius: 3px;
   font-size: 13px;
-  color: var(--neon-cyan);
+  color: var(--neon-1);
 }
 .msg.bot pre {
-  background: rgba(0,0,0,.4);
-  padding: 12px;
-  border-radius: 8px;
+  background: rgba(0,0,0,.3);
+  padding: 10px;
+  border-radius: 6px;
   overflow-x: auto;
-  margin: 8px 0;
-  border: 1px solid rgba(0,240,255,.1);
+  margin: 6px 0;
+  border: 1px solid rgba(0,0,0,.1);
   position: relative;
 }
-.msg.bot pre code { background: none; padding: 0; color: inherit; font-family: 'JetBrains Mono', monospace; font-size: 13px; }
-.msg.bot ul, .msg.bot ol { padding-left: 20px; margin: 4px 0; }
-.msg.bot a { color: var(--neon-cyan); text-decoration: none; }
-.msg.bot a:hover { text-shadow: 0 0 8px rgba(0,240,255,.5); }
-.msg.bot hr { border: none; border-top: 1px solid var(--border); margin: 12px 0; }
+.msg.bot pre code { background: none; padding: 0; color: inherit; font-family: var(--font-mono); font-size: 13px; }
+.msg.bot ul, .msg.bot ol { padding-left: 18px; margin: 4px 0; }
+.msg.bot a { color: var(--neon-1); text-decoration: none; }
+.msg.bot a:hover { text-shadow: 0 0 6px rgba(0,0,0,.3); }
+.msg.bot hr { border: none; border-top: 1px solid var(--border); margin: 10px 0; }
 .msg.bot blockquote {
-  border-left: 3px solid var(--neon-purple);
-  padding-left: 12px;
-  margin: 8px 0;
+  border-left: 3px solid var(--neon-3);
+  padding-left: 10px;
+  margin: 6px 0;
   color: var(--text-secondary);
 }
 
+/* copy button */
 .copy-btn {
   position: absolute;
-  top: 6px; right: 6px;
-  padding: 3px 8px;
+  top: 5px; right: 5px;
+  padding: 2px 7px;
   font-size: 10px;
-  background: rgba(0,240,255,.08);
-  border: 1px solid rgba(0,240,255,.15);
-  border-radius: 4px;
-  color: var(--neon-cyan);
+  background: rgba(0,0,0,.15);
+  border: 1px solid rgba(0,0,0,.1);
+  border-radius: 3px;
+  color: var(--text-secondary);
   cursor: pointer;
   opacity: 0;
   transition: opacity .2s;
 }
 pre:hover .copy-btn { opacity: 1; }
-.copy-btn:hover { background: rgba(0,240,255,.18); }
+.copy-btn:hover { background: rgba(0,0,0,.25); }
 
 .timestamp {
   font-size: 10px;
@@ -192,55 +340,57 @@ pre:hover .copy-btn { opacity: 1; }
 
 .search-info {
   font-size: 11px;
-  color: var(--neon-magenta);
+  color: var(--neon-2);
   align-self: flex-start;
-  padding: 2px 18px;
-  opacity: .75;
+  padding: 2px 16px;
+  opacity: .7;
 }
 
 .loading {
   align-self: flex-start;
-  color: var(--neon-cyan);
-  font-family: 'JetBrains Mono', monospace;
+  color: var(--neon-1);
+  font-family: var(--font-mono);
   font-size: 12px;
-  padding: 8px 18px;
+  padding: 6px 16px;
 }
 
+/* ===== INPUT ===== */
+
 .input-area {
-  padding: 16px 24px;
+  padding: 14px 20px;
   background: var(--bg-secondary);
   border-top: 1px solid var(--border);
   display: flex;
-  gap: 10px;
+  gap: 8px;
   flex-shrink: 0;
 }
 .input-area textarea {
   flex: 1;
-  padding: 10px 16px;
+  padding: 8px 14px;
   border: 1px solid var(--border);
-  border-radius: 8px;
+  border-radius: 7px;
   background: var(--bg-primary);
   color: var(--text-primary);
   font-size: 14px;
   outline: none;
   resize: none;
-  min-height: 42px;
-  max-height: 160px;
+  min-height: 38px;
+  max-height: 150px;
   line-height: 1.4;
   font-family: inherit;
   transition: border-color .2s, box-shadow .2s;
 }
 .input-area textarea:focus {
-  border-color: var(--neon-cyan);
-  box-shadow: var(--glow-cyan);
+  border-color: var(--neon-1);
+  box-shadow: var(--glow-1);
 }
 .input-area textarea::placeholder { color: var(--text-dim); }
 .input-area button {
-  padding: 10px 24px;
-  border: 1px solid var(--neon-cyan);
-  border-radius: 8px;
+  padding: 8px 20px;
+  border: 1px solid var(--neon-1);
+  border-radius: 7px;
   background: transparent;
-  color: var(--neon-cyan);
+  color: var(--neon-1);
   cursor: pointer;
   font-size: 13px;
   font-weight: 600;
@@ -250,21 +400,33 @@ pre:hover .copy-btn { opacity: 1; }
   align-self: flex-end;
 }
 .input-area button:hover {
-  background: var(--neon-cyan);
+  background: var(--neon-1);
   color: var(--bg-primary);
-  box-shadow: var(--glow-cyan);
+  box-shadow: var(--glow-1);
 }
 .input-area button:disabled { opacity: .3; cursor: not-allowed; box-shadow: none; }
 </style>
 </head>
-<body>
+<body class="theme-cyberpunk">
+<div class="scanlines"></div>
 
 <div class="header">
-  <div>
-    <div class="header-title">OLLAMA BOT</div>
-    <div class="header-sub">Model: MODEL_NAME</div>
+  <div class="header-left">
+    <div>
+      <div class="header-title">OLLAMA BOT</div>
+      <div class="header-sub">Model: MODEL_NAME</div>
+    </div>
   </div>
-  <button class="btn" onclick="clearChat()">Clear</button>
+  <div class="header-right">
+    <select class="theme-picker" id="themePicker" onchange="setTheme(this.value)">
+      <option value="cyberpunk">Cyberpunk</option>
+      <option value="orange-crt">Orange CRT</option>
+      <option value="green-crt">Green CRT</option>
+      <option value="modern">Modern</option>
+      <option value="simple">Simple</option>
+    </select>
+    <button class="btn" onclick="clearChat()">Clear</button>
+  </div>
 </div>
 
 <div id="messages"></div>
@@ -279,9 +441,20 @@ let thinkingTimer = null;
 let currentBotMsg = null;
 let fullContent = '';
 
+function setTheme(name) {
+  document.body.className = 'theme-' + name;
+  localStorage.setItem('ollama-bot-theme', name);
+  document.getElementById('themePicker').value = name;
+}
+
+(function loadTheme() {
+  const saved = localStorage.getItem('ollama-bot-theme') || 'cyberpunk';
+  setTheme(saved);
+})();
+
 function autoResize(el) {
   el.style.height = 'auto';
-  el.style.height = Math.min(el.scrollHeight, 160) + 'px';
+  el.style.height = Math.min(el.scrollHeight, 150) + 'px';
 }
 
 function createCopyBtn(pre) {
@@ -402,7 +575,7 @@ async function sendMessage() {
     document.getElementById('input').focus();
   });
 
-    es.addEventListener('error', function (e) {
+  es.addEventListener('error', function (e) {
     es.close();
     removeLoading();
     if (e.data) {
@@ -411,7 +584,7 @@ async function sendMessage() {
         const c = document.getElementById('messages');
         const d = document.createElement('div');
         d.className = 'msg bot';
-        d.innerHTML = '<span style="color:var(--neon-magenta)">ERROR: ' + (p.message || '') + '</span>';
+        d.innerHTML = '<span style="color:var(--neon-2)">ERROR: ' + (p.message || '') + '</span>';
         c.appendChild(d);
       } catch (_) {}
     } else if (!started) {
