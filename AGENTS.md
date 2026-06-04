@@ -1,0 +1,24 @@
+# Ollama Bot – Agent Guidance
+
+- **Config loading order**: `DEFAULT_CONFIG` → external file (`config.json|yaml|yml` in cwd or given via `--config`) → CLI overrides (`--api-key`, `--config` path). If an external file sets `llm.model`, that model is **preserved** even when other overrides are applied.
+- **Start the REPL**: simply run `ollama-bot` (no arguments) or `ollama-bot --chat`. The interactive UI uses Rich for markdown, spinner, and panel display.
+- **Single‑task mode**: `ollama-bot "<task>"` runs the agent once, prints the answer, then prints a JSON telemetry report.
+- **Web server**: `ollama-bot --serve` launches FastAPI on port `80` (or `--port <n>`). The UI shows the model name, theme picker, and a clear‑chat button.
+- **CLI overrides**: `--api-key <key>` injects `{"llm": {"api_key": <key>}}` into the config before loading the external file.
+- **Tool registration**: `Agent` registers `search_web` by default. Custom tools can be added via `agent.register_tool(fn, name="...", description="...")`; they become visible to the LLM through the system prompt.
+- **Web search caching**: `search_web` caches up to 50 distinct queries; cached results are prefixed with `(cached results)`.
+- **Query validation**: queries longer than 80 chars, shorter than 3 chars, >8 words, or containing apology/refusal patterns are discarded. Invalid intent fallback uses the first 80 chars of the user input.
+- **Recursive search**: after initial intent queries, the planner may request up to 2 follow‑up searches (max 5 results each). Follow‑up queries undergo the same validation.
+- **Citation enforcement**: every factual claim must include `[n]`. If citations are missing on a verified answer, the bot appends ` [1]` pointing to the first result.
+- **Self‑reflection**: controlled by `self_reflection.enabled` (default `false`). When enabled, the agent runs an extra LLM pass to critique its answer before final output.
+- **Planner limits**: `planner.max_iterations` (default 10) and `planner.max_tool_errors` (default 3) are read from config; exceeding them aborts the ReAct loop.
+- **Memory back‑end**: configurable via `memory.type` (`in_memory` by default) and `memory.ttl` seconds. The factory creates the appropriate backend; no persistence beyond process lifetime unless a different backend is specified.
+- **Telemetry**: token counts, latency (ms), model name and cost are recorded per LLM call. `agent.report()` returns a dict; the CLI prints it after a single‑task run, and the web UI exposes it at `/api/report`.
+- **REPL commands**: `/exit` quits, `/clear` resets conversation & telemetry, `/report` shows the telemetry dict, `/help` lists these commands.
+- **FastAPI endpoints**:
+  - `GET /` – serves the HTML UI, injecting the current model name.
+  - `GET /api/chat?message=…` – SSE stream (`search`, `token`, `done`, `error`).
+  - `POST /api/clear` – clears chat history.
+  - `GET /api/report` – returns telemetry JSON.
+- **Theme handling**: UI theme is stored in `localStorage` under `ollama-bot-theme`; default is `cyberpunk`. Changing the selector updates CSS class `theme-<name>`.
+- **Testing entry point**: `pytest` discovers tests under `tests/`; the package is installable via `pip install -e .` as defined in `pyproject.toml` (`[project.scripts] ollama-bot = "src.cli:main"`).
