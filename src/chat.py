@@ -17,8 +17,18 @@ from src.agent import Agent
 console = Console()
 
 INTENT_SYSTEM = (
-    "Generate up to 3 web search queries to find current information for this request. "
-    "Output one query per line, nothing else. If no search is needed, output: NO_SEARCH"
+    "You are a search query generator. Output 1-3 short keyword-based search queries "
+    "that a search engine like Google or DuckDuckGo would understand. "
+    "Do NOT answer the user's question. Do NOT write full sentences. "
+    "Output one query per line, nothing else. "
+    "If no search is needed, output: NO_SEARCH\n\n"
+    "Examples:\n"
+    "User: What's the capital of France?\n"
+    "Output: France capital\n\n"
+    "User: Tell me about the latest iPhone\n"
+    "Output: iPhone 16 release date specs\n\n"
+    "User: How's the weather in Tokyo?\n"
+    "Output: Tokyo weather forecast"
 )
 
 CHECK_SYSTEM = (
