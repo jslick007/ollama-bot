@@ -3,14 +3,21 @@ from typing import List, Dict, Any, Optional, Callable
 
 
 class PromptTemplate:
-    def __init__(self, system: str = "", tools: str = "", memory: str = "", user: str = ""):
+    def __init__(
+        self, system: str = "", tools: str = "", memory: str = "", user: str = ""
+    ):
         self.system = system
         self.tools = tools
         self.memory = memory
         self.user = user
 
-    def build(self, system: Optional[str] = None, tools: Optional[str] = None,
-              memory: Optional[str] = None, user: Optional[str] = None) -> List[Dict[str, str]]:
+    def build(
+        self,
+        system: Optional[str] = None,
+        tools: Optional[str] = None,
+        memory: Optional[str] = None,
+        user: Optional[str] = None,
+    ) -> List[Dict[str, str]]:
         messages = []
         sys_content = system if system is not None else self.system
         if sys_content:
@@ -57,7 +64,9 @@ class CompressionStrategy:
         self.token_counter = token_counter
         self.max_tokens = max_tokens
 
-    def truncate(self, messages: List[Dict[str, str]], reserve: int = 512) -> List[Dict[str, str]]:
+    def truncate(
+        self, messages: List[Dict[str, str]], reserve: int = 512
+    ) -> List[Dict[str, str]]:
         budget = self.max_tokens - reserve
         result = []
         total = 0
@@ -74,23 +83,34 @@ class CompressionStrategy:
                 break
         return result
 
-    def summarize(self, messages: List[Dict[str, str]],
-                  llm: Callable[[List[Dict[str, str]]], str]) -> List[Dict[str, str]]:
+    def summarize(
+        self, messages: List[Dict[str, str]], llm: Callable[[List[Dict[str, str]]], str]
+    ) -> List[Dict[str, str]]:
         full_text = "\n".join(m["content"] for m in messages)
         tokens = self.token_counter(full_text)
         if tokens <= self.max_tokens:
             return messages
         summarization_prompt = [
-            {"role": "system", "content": "Summarize the following conversation concisely, preserving key facts and context."},
-            {"role": "user", "content": full_text}
+            {
+                "role": "system",
+                "content": "Summarize the following conversation concisely, preserving key facts and context.",
+            },
+            {"role": "user", "content": full_text},
         ]
         summary = llm(summarization_prompt)
         budget = self.max_tokens // 2
         if self.token_counter(summary) > budget:
             summary = summary[:budget]
-        return [{"role": "system", "content": f"Summary of previous conversation:\n{summary}"}]
+        return [
+            {
+                "role": "system",
+                "content": f"Summary of previous conversation:\n{summary}",
+            }
+        ]
 
-    def select_tools(self, tools: List[Dict[str, Any]], query: str) -> List[Dict[str, Any]]:
+    def select_tools(
+        self, tools: List[Dict[str, Any]], query: str
+    ) -> List[Dict[str, Any]]:
         query_lower = query.lower()
         scored = []
         for tool in tools:

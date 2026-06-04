@@ -1,4 +1,4 @@
-from typing import List, Dict, Any, Optional, Callable
+from typing import List, Dict, Optional, Callable
 
 
 class SelfReflectionModule:
@@ -11,8 +11,11 @@ class SelfReflectionModule:
             return None
         history = "\n".join(f"{m['role']}: {m['content']}" for m in conversation)
         critique_prompt = [
-            {"role": "system", "content": "You are a critic reviewing an AI agent's reasoning. Identify flaws, suggest improvements, and note any missing steps."},
-            {"role": "user", "content": f"Review this conversation:\n{history}"}
+            {
+                "role": "system",
+                "content": "You are a critic reviewing an AI agent's reasoning. Identify flaws, suggest improvements, and note any missing steps.",
+            },
+            {"role": "user", "content": f"Review this conversation:\n{history}"},
         ]
         return self.llm(critique_prompt)
 
@@ -20,7 +23,13 @@ class SelfReflectionModule:
         if not self.enabled or not critique:
             return original_response
         refine_prompt = [
-            {"role": "system", "content": "Improve the following answer based on the critique provided."},
-            {"role": "user", "content": f"Original answer:\n{original_response}\n\nCritique:\n{critique}\n\nProvide an improved final answer."}
+            {
+                "role": "system",
+                "content": "Improve the following answer based on the critique provided.",
+            },
+            {
+                "role": "user",
+                "content": f"Original answer:\n{original_response}\n\nCritique:\n{critique}\n\nProvide an improved final answer.",
+            },
         ]
         return self.llm(refine_prompt)

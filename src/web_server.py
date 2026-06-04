@@ -1,4 +1,3 @@
-import json
 from fastapi import FastAPI, Request
 from fastapi.responses import HTMLResponse, JSONResponse
 from src.agent import Agent
@@ -271,6 +270,7 @@ async def report():
 
 def run_server(agent: Agent, host: str = "127.0.0.1", port: int = 80):
     import uvicorn
+
     init(agent)
     print(f"Web server listening on http://{host}:{port}")
     uvicorn.run(app, host=host, port=port, log_level="info")

@@ -1,10 +1,11 @@
 import pytest
-import json
 from src.telemetry import TelemetryCollector
+
 
 @pytest.fixture
 def telemetry():
     return TelemetryCollector(log_to_stdout=False)
+
 
 def test_record_llm_call(telemetry):
     telemetry.record_llm_call("gpt-3.5-turbo", 100, 50, 200.0)
@@ -13,10 +14,12 @@ def test_record_llm_call(telemetry):
     assert telemetry.total_completion_tokens == 50
     assert telemetry.total_cost > 0
 
+
 def test_cost_estimation(telemetry):
     telemetry.record_llm_call("gpt-4", 1000, 500, 150.0)
     expected_cost = (1000 / 1000 * 0.03) + (500 / 1000 * 0.06)
     assert telemetry.total_cost == expected_cost
+
 
 def test_report(telemetry):
     telemetry.record_llm_call("gpt-3.5-turbo", 200, 100, 300.0)
@@ -26,12 +29,14 @@ def test_report(telemetry):
     assert report["total_tokens"] == 750
     assert report["average_latency_ms"] == 350.0
 
+
 def test_reset(telemetry):
     telemetry.record_llm_call("gpt-3.5-turbo", 100, 50, 100.0)
     telemetry.reset()
     assert len(telemetry.calls) == 0
     assert telemetry.total_prompt_tokens == 0
     assert telemetry.total_cost == 0.0
+
 
 def test_custom_pricing():
     pricing = {"custom-model": {"input": 0.005, "output": 0.01}}

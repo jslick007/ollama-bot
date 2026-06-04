@@ -140,13 +140,18 @@ def repl(agent: Agent):
 
 def main():
     import argparse
+
     parser = argparse.ArgumentParser(description="Ollama Bot Agent")
     parser.add_argument("task", nargs="?", help="Task to run")
     parser.add_argument("--config", "-c", help="Path to config file")
     parser.add_argument("--api-key", "-k", help="OpenAI API key")
-    parser.add_argument("--chat", action="store_true", help="Start interactive chat REPL")
+    parser.add_argument(
+        "--chat", action="store_true", help="Start interactive chat REPL"
+    )
     parser.add_argument("--serve", action="store_true", help="Start web server")
-    parser.add_argument("--port", type=int, default=80, help="Web server port (default: 80)")
+    parser.add_argument(
+        "--port", type=int, default=80, help="Web server port (default: 80)"
+    )
     args = parser.parse_args()
 
     config = {}
@@ -157,6 +162,7 @@ def main():
 
     if args.serve:
         from src.web_server import run_server
+
         run_server(agent, port=args.port)
 
     if args.task:

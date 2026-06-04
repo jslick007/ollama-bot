@@ -1,5 +1,5 @@
 from collections import OrderedDict
-from typing import Any, Dict, List, Optional
+from typing import Dict, List, Optional
 from ddgs import DDGS
 
 
@@ -39,11 +39,13 @@ def search_web(query: str, max_results: int = 5) -> str:
         return f"Search error: {e}"
     results = []
     for r in raw:
-        results.append({
-            "title": r.get("title", ""),
-            "snippet": r.get("body", ""),
-            "url": r.get("href", ""),
-        })
+        results.append(
+            {
+                "title": r.get("title", ""),
+                "snippet": r.get("body", ""),
+                "url": r.get("href", ""),
+            }
+        )
     _cache.put(query, results)
     return _format_results(results, cached=False)
 
@@ -55,7 +57,7 @@ def _format_results(results: List[Dict[str, str]], cached: bool = False) -> str:
     if cached:
         lines.append("(cached results)")
     for i, r in enumerate(results):
-        lines.append(f"[{i+1}] {r['title']}")
+        lines.append(f"[{i + 1}] {r['title']}")
         lines.append(f"    {r['snippet']}")
         lines.append(f"    Source: {r['url']}")
     return "\n".join(lines)

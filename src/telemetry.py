@@ -1,6 +1,5 @@
 import time
 import json
-import logging
 from typing import Dict, Any, Optional
 
 
@@ -12,8 +11,12 @@ DEFAULT_PRICING = {
 
 
 class TelemetryCollector:
-    def __init__(self, pricing: Optional[Dict[str, Dict[str, float]]] = None,
-                 log_to_stdout: bool = True, log_file: Optional[str] = None):
+    def __init__(
+        self,
+        pricing: Optional[Dict[str, Dict[str, float]]] = None,
+        log_to_stdout: bool = True,
+        log_file: Optional[str] = None,
+    ):
         self.pricing = pricing or DEFAULT_PRICING
         self.calls = []
         self.total_prompt_tokens = 0
@@ -25,8 +28,14 @@ class TelemetryCollector:
         if log_file:
             self._file_handle = open(log_file, "a")
 
-    def record_llm_call(self, model: str, prompt_tokens: int, completion_tokens: int,
-                        latency_ms: float, cost: Optional[float] = None):
+    def record_llm_call(
+        self,
+        model: str,
+        prompt_tokens: int,
+        completion_tokens: int,
+        latency_ms: float,
+        cost: Optional[float] = None,
+    ):
         if cost is None:
             cost = self._estimate_cost(model, prompt_tokens, completion_tokens)
         call = {
@@ -36,7 +45,7 @@ class TelemetryCollector:
             "total_tokens": prompt_tokens + completion_tokens,
             "latency_ms": latency_ms,
             "cost": cost,
-            "timestamp": time.time()
+            "timestamp": time.time(),
         }
         self.calls.append(call)
         self.total_prompt_tokens += prompt_tokens
@@ -49,10 +58,14 @@ class TelemetryCollector:
             self._file_handle.write(line + "\n")
             self._file_handle.flush()
 
-    def _estimate_cost(self, model: str, prompt_tokens: int, completion_tokens: int) -> float:
+    def _estimate_cost(
+        self, model: str, prompt_tokens: int, completion_tokens: int
+    ) -> float:
         prices = self.pricing.get(model, {"input": 0.002, "output": 0.002})
-        return (prompt_tokens / 1000 * prices["input"] +
-                completion_tokens / 1000 * prices["output"])
+        return (
+            prompt_tokens / 1000 * prices["input"]
+            + completion_tokens / 1000 * prices["output"]
+        )
 
     def report(self) -> Dict[str, Any]:
         return {
@@ -63,7 +76,9 @@ class TelemetryCollector:
             "total_cost": round(self.total_cost, 6),
             "average_latency_ms": round(
                 sum(c["latency_ms"] for c in self.calls) / len(self.calls), 2
-            ) if self.calls else 0
+            )
+            if self.calls
+            else 0,
         }
 
     def reset(self):

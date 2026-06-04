@@ -55,7 +55,9 @@ def _find_config(path: Optional[str] = None) -> Optional[Dict[str, Any]]:
     return None
 
 
-def load_config(path: Optional[str] = None, overrides: Optional[Dict[str, Any]] = None) -> Dict[str, Any]:
+def load_config(
+    path: Optional[str] = None, overrides: Optional[Dict[str, Any]] = None
+) -> Dict[str, Any]:
     config = DEFAULT_CONFIG.copy()
     file_config = _find_config(path)
     if file_config:

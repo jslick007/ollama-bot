@@ -1,13 +1,17 @@
 import re
 import json
-from typing import List, Dict, Any, Optional, Callable
-from src.tool_executor import ToolRegistry, ToolDefinition
-from src.prompt_manager import PromptTemplate
+from typing import Callable
+from src.tool_executor import ToolRegistry
 
 
 class ReActPlanner:
-    def __init__(self, llm: Callable, tool_registry: ToolRegistry,
-                 max_iterations: int = 10, max_tool_errors: int = 3):
+    def __init__(
+        self,
+        llm: Callable,
+        tool_registry: ToolRegistry,
+        max_iterations: int = 10,
+        max_tool_errors: int = 3,
+    ):
         self.llm = llm
         self.tool_registry = tool_registry
         self.max_iterations = max_iterations
@@ -34,7 +38,7 @@ class ReActPlanner:
         system_prompt = self._build_system_prompt()
         messages = [
             {"role": "system", "content": system_prompt},
-            {"role": "user", "content": task}
+            {"role": "user", "content": task},
         ]
         iteration = 0
         while iteration < self.max_iterations:
@@ -51,7 +55,12 @@ class ReActPlanner:
                 try:
                     action_input = json.loads(raw_input)
                 except json.JSONDecodeError:
-                    messages.append({"role": "system", "content": f"Error: Invalid JSON in Action Input: {raw_input}. Please provide valid JSON."})
+                    messages.append(
+                        {
+                            "role": "system",
+                            "content": f"Error: Invalid JSON in Action Input: {raw_input}. Please provide valid JSON.",
+                        }
+                    )
                     continue
                 try:
                     result = self.tool_registry.execute(action, **action_input)
@@ -62,8 +71,15 @@ class ReActPlanner:
                     if self.tool_errors >= self.max_tool_errors:
                         return f"Task failed after {self.tool_errors} tool errors."
                     result_str = f"Error: {str(e)}"
-                messages.append({"role": "system", "content": f"Observation: {result_str}"})
+                messages.append(
+                    {"role": "system", "content": f"Observation: {result_str}"}
+                )
             else:
-                messages.append({"role": "system", "content": "Error: Could not parse response. Use the specified format with Thought/Action/Action Input or Final Answer."})
+                messages.append(
+                    {
+                        "role": "system",
+                        "content": "Error: Could not parse response. Use the specified format with Thought/Action/Action Input or Final Answer.",
+                    }
+                )
             iteration += 1
         return "Max iterations reached without final answer."
