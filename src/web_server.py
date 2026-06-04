@@ -25,7 +25,7 @@ HTML_PAGE = """\
 <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🤖</text></svg>">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700&family=JetBrains+Mono:wght@400;600&family=VT323&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700&family=JetBrains+Mono:wght@400;600&family=VT323&family=Press+Start+2P&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/styles/atom-one-dark.min.css">
 <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/highlight.min.js"></script>
@@ -69,8 +69,8 @@ HTML_PAGE = """\
   --glow-1: 0 0 12px rgba(255,136,0,.15), 0 0 30px rgba(255,136,0,.05);
   --glow-2: 0 0 12px rgba(204,102,0,.15), 0 0 30px rgba(204,102,0,.05);
   --border: #3a2000;
-  --font-display: 'VT323', monospace;
-  --font-mono: 'VT323', monospace;
+  --font-display: 'Press Start 2P', monospace;
+  --font-mono: 'Press Start 2P', monospace;
   --msg-user-bg: rgba(255,136,0,.08);
   --msg-user-border: rgba(255,136,0,.2);
   --msg-bot-bg: rgba(255,136,0,.05);
@@ -92,8 +92,8 @@ HTML_PAGE = """\
   --glow-1: 0 0 12px rgba(0,255,51,.15), 0 0 30px rgba(0,255,51,.05);
   --glow-2: 0 0 12px rgba(0,204,34,.15), 0 0 30px rgba(0,204,34,.05);
   --border: #003300;
-  --font-display: 'VT323', monospace;
-  --font-mono: 'VT323', monospace;
+  --font-display: 'Press Start 2P', monospace;
+  --font-mono: 'Press Start 2P', monospace;
   --msg-user-bg: rgba(0,255,51,.08);
   --msg-user-border: rgba(0,255,51,.2);
   --msg-bot-bg: rgba(0,255,51,.05);
