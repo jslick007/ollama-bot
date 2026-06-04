@@ -94,35 +94,39 @@ class ReActPlanner:
         return False
 
     def run(self, task: str) -> str:
-        # 1. Determine if we need external information
+        # 1️⃣  Quick external‑info check (single LLM call)
         need_external = hasattr(self, "_needs_external") and self._needs_external(task)
         system_prompt = self._build_system_prompt()
         messages = [{"role": "system", "content": system_prompt}]
+
         if need_external:
-            # 2. Extract concise search terms (3‑4) from the task
-            terms = self._extract_search_terms(task)
-            observations = []
+            # 2️⃣  Extract up to two concise search terms (single LLM call inside _extract_search_terms)
+            terms = self._extract_search_terms(task)[:2]
             for term in terms:
                 try:
+                    # One DDG request per term – add the exact query to the context
                     result = self.tool_registry.execute("search_web", query=term)
-                    # Include the exact query used for transparency
-                    observations.append(f"Query: {term}\n{result}")
-                except Exception as e:
-                    observations.append(f"Error during search for '{term}': {e}")
-            # 3. Add observations to the message history (each includes the query)
-            for obs in observations:
-                messages.append({"role": "assistant", "content": f"Observation: {obs}"})
-        # 4. Add the original user request
+                    messages.append(
+                        {
+                            "role": "assistant",
+                            "content": f"Observation: Query: {term}\n{result}",
+                        }
+                    )
+                except Exception:
+                    # If a search fails, just continue – we still want a fast answer
+                    continue
+
+        # 3️⃣  Append the original user request and get the final answer in ONE LLM call
         messages.append({"role": "user", "content": task})
-        # 5. Generate an answer (no explicit ReAct loop needed for simple cases)
         answer_response = self.llm(messages)
-        # If the model used the "Final Answer:" format, extract it
+        # Respect the "Final Answer:" wrapper if the model uses it
         final_match = re.search(r"Final Answer:\s*(.*)", answer_response, re.DOTALL)
         answer = (
             final_match.group(1).strip() if final_match else answer_response.strip()
         )
-        # 6. Verify answer matches intent exactly
-        if need_external:
-            if not self._verify_answer(task, answer):
-                return "Unable to verify that the generated answer fully satisfies the user intent."
+
+        # 4️⃣  OPTIONAL verification – disabled for speed. Uncomment if you need strictness.
+        # if need_external:
+        #     if not self._verify_answer(task, answer):
+        #         return "Unable to verify that the generated answer fully satisfies the user intent."
         return answer
