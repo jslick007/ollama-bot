@@ -105,10 +105,11 @@ class ReActPlanner:
             for term in terms:
                 try:
                     result = self.tool_registry.execute("search_web", query=term)
-                    observations.append(str(result))
+                    # Include the exact query used for transparency
+                    observations.append(f"Query: {term}\n{result}")
                 except Exception as e:
                     observations.append(f"Error during search for '{term}': {e}")
-            # 3. Add observations to the message history
+            # 3. Add observations to the message history (each includes the query)
             for obs in observations:
                 messages.append({"role": "assistant", "content": f"Observation: {obs}"})
         # 4. Add the original user request
