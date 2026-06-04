@@ -1,0 +1,26 @@
+{
+    "llm": {
+        "provider": "openai",
+        "model": "tinyllama:latest",
+        "api_key": "ollama",
+        "base_url": "http://192.168.1.75:11434/v1"
+    },
+    "planner": {
+        "max_iterations": 10,
+        "max_tool_errors": 3
+    },
+    "memory": {
+        "type": "in_memory",
+        "ttl": 3600
+    },
+    "prompt": {
+        "max_tokens": 4096
+    },
+    "self_reflection": {
+        "enabled": true
+    },
+    "telemetry": {
+        "log_to_stdout": false,
+        "log_file": null
+    }
+}
