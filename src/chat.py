@@ -1,4 +1,5 @@
 import json
+import re
 import time
 from typing import Dict, List
 
@@ -13,13 +14,25 @@ from src.agent import Agent
 console = Console()
 
 INTENT_SYSTEM = (
-    "Generate a web search query to find current information for this request. "
-    "Output only the query, nothing else. If no search is needed, output: NO_SEARCH"
+    "Generate up to 3 web search queries to find current information for this request. "
+    "Output one query per line, nothing else. If no search is needed, output: NO_SEARCH"
 )
 
 CHECK_SYSTEM = (
     "Given the question and search results, determine if you have enough information "
     "to answer comprehensively. Reply only: ENOUGH or a follow-up search query."
+)
+
+VERIFY_SYSTEM = (
+    "You are a fact-checker. Given the search results and an answer, "
+    "list any claims in the answer that are NOT supported by the search results. "
+    "Be specific. If ALL claims are supported, output only: VERIFIED"
+)
+
+CITATION_LINE = (
+    "CRITICAL: Every factual claim MUST be followed by a citation number in brackets "
+    "like [1] or [2]. Cite the search result number for each claim. "
+    "If you cannot cite a source, do not make the claim."
 )
 
 
@@ -40,7 +53,7 @@ class ChatSession:
             "You are a helpful AI assistant. Answer the user's question using the web search results provided below.",
             "If the search results contain relevant information, summarize it in your own words.",
             "If the search results are empty or unhelpful, say so and answer based on your own knowledge.",
-            "Cite sources by number when possible, like [1] or [2].",
+            CITATION_LINE,
         ]
         system = "\n".join(system_lines)
         if tools_desc:
@@ -50,7 +63,7 @@ class ChatSession:
         messages.append({"role": "user", "content": user_input})
         return messages
 
-    def _llm_call(self, messages: List[Dict[str, str]]) -> str:
+    def _llm_call(self, messages: List[Dict[str, str]], **kwargs) -> str:
         try:
             with Progress(
                 SpinnerColumn(),
@@ -59,42 +72,43 @@ class ChatSession:
                 console=console,
             ) as progress:
                 progress.add_task("Thinking...", total=None)
-                return self.agent._llm_call_with_telemetry(messages)
+                return self.agent._llm_call_with_telemetry(messages, **kwargs)
         except UnicodeEncodeError:
-            return self.agent._llm_call_with_telemetry(messages)
+            return self.agent._llm_call_with_telemetry(messages, **kwargs)
 
     def _determine_intent(self, user_input: str) -> List[str]:
         messages = [
             {"role": "system", "content": INTENT_SYSTEM},
             {"role": "user", "content": user_input},
         ]
-        query = self._llm_call(messages).strip().strip("\"'")
-        if query.upper() == "NO_SEARCH":
-            return []
-        self.search_history.append(query)
-        try:
-            console.print(f"  [dim]search:[/] {query}")
-        except Exception:
-            pass
-        return [query]
+        result = self._llm_call(messages).strip()
+        queries = [q.strip().strip("\"'") for q in result.split("\n") if q.strip()]
+        queries = [q for q in queries if q.upper() != "NO_SEARCH"]
+        queries = queries[:3]
+        for q in queries:
+            self.search_history.append(q)
+            try:
+                console.print(f"  [dim]search:[/] {q}")
+            except Exception:
+                pass
+        return queries
 
     def _recursive_search(self, queries: List[str], user_input: str, max_rounds: int = 2) -> str:
         if not queries:
             return ""
         all_results: List[Dict] = []
-        query = queries[0]
-        for _ in range(max_rounds):
+        for q in queries:
             try:
                 results = self.agent.tool_registry.execute(
-                    "search_web", query=query, max_results=5
+                    "search_web", query=q, max_results=5
                 )
-                self.last_search_query = query
-                all_results.append({"query": query, "results": results})
+                self.last_search_query = q
+                all_results.append({"query": q, "results": results})
             except Exception:
                 self.last_search_query = ""
-                break
-            if _ == max_rounds - 1:
-                break
+        if not all_results:
+            return ""
+        for _ in range(max_rounds):
             context = self._format_context(all_results)
             check_messages = [
                 {"role": "system", "content": CHECK_SYSTEM},
@@ -112,15 +126,69 @@ class ChatSession:
                 console.print(f"  [dim]search:[/] {query}")
             except Exception:
                 pass
+            try:
+                results = self.agent.tool_registry.execute(
+                    "search_web", query=query, max_results=5
+                )
+                self.last_search_query = query
+                all_results.append({"query": query, "results": results})
+            except Exception:
+                pass
         return self._format_context(all_results)
 
     def _format_context(self, results_list: List[Dict]) -> str:
         if not results_list:
             return ""
         context_lines = ["Web search results:"]
-        for s in results_list:
-            context_lines.append(f"Query: {s['query']}\n{s['results']}")
+        for i, s in enumerate(results_list, 1):
+            context_lines.append(f"[{i}] Query: {s['query']}\n{s['results']}")
         return "\n\n".join(context_lines)
+
+    def _self_consistency(self, messages: List[Dict]) -> str:
+        answer1 = self._llm_call(messages, temperature=0.3)
+        answer2 = self._llm_call(messages, temperature=0.7)
+        c1 = len(re.findall(r"\[\d+\]", answer1))
+        c2 = len(re.findall(r"\[\d+\]", answer2))
+        if abs(len(answer1) - len(answer2)) > 200:
+            return answer1 if len(answer1) > len(answer2) else answer2
+        return answer1 if c1 >= c2 else answer2
+
+    def _verify_answer(self, response: str, search_context: str) -> str:
+        if not search_context:
+            return response
+        messages = [
+            {"role": "system", "content": VERIFY_SYSTEM},
+            {
+                "role": "user",
+                "content": f"Search results:\n{search_context}\n\nAnswer:\n{response}",
+            },
+        ]
+        result = self._llm_call(messages).strip()
+        if result.upper() == "VERIFIED":
+            try:
+                console.print("  [green]verified[/]")
+            except Exception:
+                pass
+            return response
+        try:
+            console.print(f"  [yellow]fixing:[/] {result[:120]}")
+        except Exception:
+            pass
+        messages = [
+            {
+                "role": "system",
+                "content": "You are a helpful assistant. Fix issues in your answer.",
+            },
+            {"role": "assistant", "content": response},
+            {
+                "role": "user",
+                "content": (
+                    f"The following claims are not supported by the search results:\n{result}\n\n"
+                    f"Rewrite the answer removing or correcting these claims. Cite sources properly."
+                ),
+            },
+        ]
+        return self._llm_call(messages)
 
     def send(self, user_input: str) -> str:
         self.last_search_query = ""
@@ -133,7 +201,8 @@ class ChatSession:
         messages = self._build_messages(user_input)
         if search_context:
             messages.insert(1, {"role": "system", "content": search_context})
-        response = self._llm_call(messages)
+        response = self._self_consistency(messages)
+        response = self._verify_answer(response, search_context)
         self.history.append({"role": "assistant", "content": response})
         self.processing_time = time.perf_counter() - t0
         return response
