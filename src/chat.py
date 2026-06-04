@@ -8,10 +8,7 @@ import time
 from typing import AsyncGenerator, Dict, List
 
 from rich.console import Console
-from rich.markdown import Markdown
-from rich.panel import Panel
 from rich.progress import Progress, SpinnerColumn, TextColumn, TimeElapsedColumn
-from rich.prompt import Prompt
 
 from src.agent import Agent
 
